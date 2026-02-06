@@ -1,93 +1,225 @@
-# Controlling Robots with Augmented Reality
+# Controlling Robots with Augmented Reality (AR ↔ FR3)
 
+This repository contains **system-side (Python / RCS)** and **client-side (Unity / Quest)** code
+to control a Franka FR3 robot using Augmented Reality.
 
+The pipeline is:
 
-## Getting started
+**Unity (Quest) → TCP → XR System Server → Robot Control Stack (RCS) → FR3**
+and back via **EE pose streaming**.
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+---
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+## Repository Structure
 
 ```
-cd existing_repo
-git remote add origin https://gitos.rrze.fau.de/lit25-26/controlling-robots-with-AR.git
-git branch -M main
-git push -uf origin main
+controlling-robots-with-AR/
+│
+├── scripts_rcs/          # Python system-side code (XR server + robot logic)
+│   ├── fr3_cart_grasp_xr.py
+│   ├── fr3_cart_push_xr.py
+│   ├── xr_system_server.py
+│   ├── xr_utils.py
+│   ├── robot_state_logger.py
+│   └── ...
+│
+├── scripts_unity/        # Unity client-side scripts (Quest / UI)
+│   ├── Grasp.cs
+│   ├── Push.cs
+│   ├── ObjectSpawner.cs
+│   ├── TcpClientHandler.cs
+│   ├── LockRotation.cs
+│   └── ...
+│
+└── README.md
 ```
 
-## Integrate with your tools
+---
 
-- [ ] [Set up project integrations](https://gitos.rrze.fau.de/lit25-26/controlling-robots-with-AR/-/settings/integrations)
+## 1. Install Robot Control Stack (RCS)
 
-## Collaborate with your team
+Clone and install RCS **first**:
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+```
+git clone https://github.com/RobotControlStack/robot-control-stack.git
+cd robot-control-stack
+```
 
-## Test and Deploy
+Create and activate the Python environment (recommended):
 
-Use the built-in continuous integration in GitLab.
+```
+conda create -n rcs python=3.11
+conda activate rcs
+```
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+Install RCS in editable mode:
 
-***
+```
+pip install -e .
+```
 
-# Editing this README
+Verify installation:
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+```
+python -c "import rcs; print(rcs.__version__)"
+```
 
-## Suggestions for a good README
+---
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+## 2. Install This Repository (scripts_rcs)
 
-## Name
-Choose a self-explaining name for your project.
+Clone this repository:
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+```
+git clone https://gitos.rrze.fau.de/lit25-26/controlling-robots-with-AR.git
+```
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+Copy **scripts_rcs** into the RCS repository:
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+```
+cp -r controlling-robots-with-AR/scripts_rcs robot-control-stack/
+```
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+Final structure:
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+```
+robot-control-stack/
+├── rcs/
+├── scripts_rcs/
+│   ├── xr_system_server.py
+│   ├── fr3_cart_grasp_xr.py
+│   ├── fr3_cart_push_xr.py
+│   └── xr_utils.py
+```
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+---
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+## 3. Run the XR System Server (Python)
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+Activate the RCS environment:
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+```
+conda activate rcs
+cd robot-control-stack
+```
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+Run the XR server:
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+```
+python scripts_rcs/xr_system_server.py
+```
+
+Expected output:
+
+```
+[XR SERVER] Listening on 0.0.0.0:5000
+```
+
+This server:
+- Receives object JSON from Unity
+- Converts Unity → robot frame
+- Dispatches `grasp` / `push` logic
+- Streams EE pose back to Unity
+
+---
+
+## 4. Unity Client Setup (scripts_unity)
+
+### Folder Structure
+
+Create a folder in your Unity project:
+
+```
+Assets/
+└── scripts_unity/
+    ├── Grasp.cs
+    ├── Push.cs
+    ├── ObjectSpawner.cs
+    ├── TcpClientHandler.cs
+    ├── LockRotation.cs
+    └── ...
+```
+
+Copy all files from `scripts_unity/` into this folder.
+
+---
+
+## 5. Unity Scene Requirements
+
+Required GameObjects:
+
+- **LocalOrigin**
+  - Represents robot base frame
+  - Must be manually placed on robot base
+  - Rotation must be identity
+
+- **WorkArea**
+  - BoxCollider defining spawn region
+
+- **TCP Client**
+  - Uses `TcpClientHandler.cs`
+  - Connects to XR server IP + port
+
+Unity axis convention:
+
+```
+X → Right (red)
+Y → Up    (green)
+Z → Forward (blue)
+```
+
+Robot local origin convention:
+
+```
+X → robot forward
+Y → robot left
+Z → robot up
+```
+
+---
+
+## 6. Runtime Flow
+
+1. Start XR system server (Python)
+2. Start Unity scene on Meta Quest
+3. Place **LocalOrigin** at robot base
+4. Spawn objects inside work area
+5. Press **Grasp** or **Push**
+6. Robot executes motion
+7. EE pose streams back to Unity
+
+---
+
+## 7. Notes & Tips
+
+- Object positions sent from Unity are **relative to LocalOrigin**
+- No world-frame values are used
+- Object width is derived from renderer bounds
+- Very small values (e-21) are numerical noise → safe to ignore
+- EE streaming always sends **center-aligned pose**
+
+---
+
+## 8. Troubleshooting
+
+**Robot jumps downward**
+→ Check axis mapping in `xr_utils.py`
+
+**Wrong orientation**
+→ Ensure `LocalOrigin.rotation == Quaternion.identity`
+
+**No TCP connection**
+→ Verify IP, port, firewall
+
+---
+
+## Authors
+
+LiT 25–26 – Controlling Robots with Augmented Reality  
+FAU Erlangen-Nürnberg
+
+---
 
 ## License
-For open source projects, say how it is licensed.
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+Academic / Research Use
