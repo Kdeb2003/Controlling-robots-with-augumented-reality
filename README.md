@@ -216,7 +216,7 @@ Z → robot up
 ## Authors
 
 LiT 25–26 – Controlling Robots with Augmented Reality  
-FAU Erlangen-Nürnberg
+Kushal Deb, Divyansh Kaushik, UTN, Nuremberg
 
 ---
 
